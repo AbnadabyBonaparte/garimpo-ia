@@ -37,6 +37,14 @@ export function useOpportunities(filters: Partial<FilterOptions> = {}) {
 
   const fetchOpportunities = useCallback(
     async (page = 1) => {
+      if (!supabase) {
+        setState({
+          data: { data: [], total: 0, page: 1, per_page: PAGE_SIZE, has_more: false },
+          status: 'success',
+          error: null,
+        });
+        return;
+      }
       setState((prev) => ({ ...prev, status: 'loading', error: null }));
 
       try {

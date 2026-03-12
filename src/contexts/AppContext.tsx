@@ -56,8 +56,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   }, []);
 
-  /* ── Auth listener ── */
+  /* ── Auth listener (só quando Supabase está configurado) ── */
   useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       if (s?.user) void fetchProfile(s.user.id);
@@ -79,6 +83,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function fetchProfile(userId: string) {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -96,12 +104,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = useCallback(async (email: string, password: string) => {
+    if (!supabase) throw new Error('Configure Supabase (VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) no Vercel.');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   }, []);
 
   const signUp = useCallback(
     async (email: string, password: string, fullName: string) => {
+      if (!supabase) throw new Error('Configure Supabase (VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) no Vercel.');
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -113,6 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    if (!supabase) return;
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }, []);

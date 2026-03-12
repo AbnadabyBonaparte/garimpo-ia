@@ -9,7 +9,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { envConfig } from '@/lib/env';
 import type { AIAnalysisRequest, AIAnalysisResponse } from '@/types';
 
-const genAI = new GoogleGenerativeAI(envConfig.GEMINI_API_KEY);
+function getGenAI() {
+  if (!envConfig.GEMINI_API_KEY?.trim()) {
+    throw new Error('Configure VITE_GEMINI_API_KEY no Vercel para usar análise por IA.');
+  }
+  return new GoogleGenerativeAI(envConfig.GEMINI_API_KEY);
+}
 
 const SYSTEM_PROMPT = `Você é o motor de análise do Garimpo IA™, uma plataforma de inteligência em leilões de ativos físicos no Brasil.
 
@@ -36,6 +41,7 @@ FORMATO DE RESPOSTA (JSON):
 export async function analyzeOpportunity(
   request: AIAnalysisRequest,
 ): Promise<AIAnalysisResponse> {
+  const genAI = getGenAI();
   const model = genAI.getGenerativeModel({
     model: 'gemini-2.5-pro-preview-05-06',
     systemInstruction: SYSTEM_PROMPT,
