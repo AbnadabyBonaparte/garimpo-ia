@@ -1,0 +1,338 @@
+You are a senior software architect, startup CTO, security auditor, and venture technical due-diligence specialist.
+
+Your task is to perform a **deep, unbiased, external audit** of the GARIMPO IA system.
+
+Important rules:
+
+• Assume nothing is correct unless verified.
+• Do not trust documentation unless the code confirms it.
+• Base conclusions strictly on architecture, code, and implementation details.
+• Be brutally honest and technically rigorous.
+
+This is a **technical due diligence audit** similar to what investors perform before funding a startup.
+
+------------------------------------------------
+
+PROJECT CONTEXT
+
+GARIMPO IA is a SaaS platform designed to discover auction opportunities, analyze them with AI, assign a score (0-100), and alert users about profitable assets.
+
+The system aims to become a large-scale intelligence platform for physical assets (similar to Bloomberg but for auctions and real-world assets).
+
+Current stack:
+
+Frontend
+- React 19
+- Vite
+- TypeScript
+- Tailwind
+
+Backend
+- Supabase (Auth + PostgreSQL + RLS)
+- Edge Functions
+
+AI
+- Google Gemini
+
+Payments
+- Stripe subscriptions
+
+Core features implemented include:
+
+- opportunity feed
+- opportunity detail page
+- AI scoring pipeline
+- alert rules
+- notifications
+- watchlist
+- analytics dashboard
+- admin opportunity insertion
+- automated scraping architecture
+- ingestion pipeline
+- duplicate detection
+- monitoring and logging
+- scheduled scrapers
+
+The system architecture currently looks like:
+
+Frontend (React)
+↓
+Supabase Auth
+↓
+Database
+  profiles
+  opportunities
+  alerts
+  alert_rules
+  watchlist
+  scraper_runs
+  auction_sources
+↓
+Edge Functions
+  create-checkout-session
+  stripe-webhook
+  run-ai-analysis
+↓
+Services Layer
+  opportunityIngestion
+  aiProcessing
+  alertEngine
+  notifications
+  scraperPipeline
+  opportunityDeduplication
+  validation
+  monitoring
+↓
+Scrapers
+↓
+Gemini AI
+↓
+Stripe
+
+------------------------------------------------
+
+YOUR TASK
+
+Perform a **complete technical audit** of the system.
+
+Your analysis must cover the following areas.
+
+------------------------------------------------
+
+1. ARCHITECTURE REVIEW
+
+Evaluate:
+
+• system architecture design
+• separation of concerns
+• scalability
+• maintainability
+• technical debt
+• coupling between modules
+
+Explain whether the architecture is appropriate for:
+
+- MVP
+- startup scale
+- large-scale data platform
+
+------------------------------------------------
+
+2. CODEBASE MATURITY
+
+Evaluate:
+
+• project organization
+• folder structure
+• naming conventions
+• type safety
+• error handling
+• validation
+• code quality
+
+Identify:
+
+• dead code
+• fragile code
+• inconsistent patterns
+• unnecessary complexity
+
+------------------------------------------------
+
+3. DATA PIPELINE
+
+Evaluate the full data flow:
+
+scrapers
+→ normalization
+→ validation
+→ ingestion
+→ AI scoring
+→ alert engine
+→ notifications
+
+Questions to answer:
+
+• Is the pipeline robust?
+• Is it fault tolerant?
+• Can it scale?
+• Where are the weakest points?
+
+------------------------------------------------
+
+4. SCRAPER ENGINE
+
+Evaluate:
+
+• scraper architecture
+• deduplication strategy
+• data quality validation
+• scheduler design
+• monitoring
+
+Identify risks such as:
+
+• scraping failures
+• data corruption
+• duplicates
+• legal concerns
+
+------------------------------------------------
+
+5. AI PIPELINE
+
+Evaluate:
+
+• integration with Gemini
+• caching strategy
+• response validation
+• cost control
+• failure handling
+
+Identify:
+
+• hallucination risks
+• data dependency risks
+• reliability concerns
+
+------------------------------------------------
+
+6. SECURITY REVIEW
+
+Audit:
+
+• authentication
+• RLS policies
+• edge function security
+• webhook verification
+• secrets management
+• API abuse risk
+
+Identify potential vulnerabilities.
+
+------------------------------------------------
+
+7. DATABASE DESIGN
+
+Review the database schema.
+
+Evaluate:
+
+• table design
+• indexing
+• normalization
+• scalability
+• future migrations
+
+Identify structural problems.
+
+------------------------------------------------
+
+8. PRODUCT ARCHITECTURE
+
+Evaluate how the technical system supports product features:
+
+feed
+alerts
+watchlist
+analytics
+notifications
+subscriptions
+
+Identify product limitations caused by architecture.
+
+------------------------------------------------
+
+9. SCALABILITY ANALYSIS
+
+Assume the platform grows to:
+
+• 10,000 users
+• 100,000 opportunities
+• 1 million records
+
+Evaluate whether the system can handle that scale.
+
+Identify bottlenecks.
+
+------------------------------------------------
+
+10. OPERATIONS & OBSERVABILITY
+
+Evaluate:
+
+• logging
+• monitoring
+• error tracking
+• scraper metrics
+• AI pipeline visibility
+
+Identify missing operational tooling.
+
+------------------------------------------------
+
+11. GAP ANALYSIS
+
+List everything missing for a production-grade platform.
+
+Examples:
+
+• missing automation
+• missing failover
+• missing data integrity checks
+• missing observability
+• missing testing
+
+------------------------------------------------
+
+12. RISK ANALYSIS
+
+Identify the top 10 technical risks of this system.
+
+Rank them by severity.
+
+------------------------------------------------
+
+13. STARTUP DUE DILIGENCE
+
+Evaluate this project as if you were a VC technical advisor.
+
+Answer:
+
+• Is the system credible?
+• Is it over-engineered?
+• Is it under-engineered?
+• Is it technically investable?
+
+------------------------------------------------
+
+14. SCORING
+
+Provide a score (0-10) for each area:
+
+Architecture
+Code quality
+Data pipeline
+AI pipeline
+Security
+Scalability
+Observability
+Product engineering
+Overall system quality
+
+------------------------------------------------
+
+15. FINAL VERDICT
+
+Provide a final summary including:
+
+• strengths
+• weaknesses
+• hidden risks
+• improvement roadmap
+
+Be extremely honest.
+
+Do not sugarcoat anything.
+
+Your goal is to reveal the **true technical state of the system**.
