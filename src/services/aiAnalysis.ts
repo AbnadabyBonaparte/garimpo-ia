@@ -2,12 +2,22 @@
  * GARIMPO IA™ — Google Gemini AI Service
  *
  * Camada de abstração para análise de oportunidades via IA.
- * Modelo: Gemini 2.5 Pro
+ * Modelo: Gemini 2.5 Pro. Validação Zod e tratamento de erro.
  */
 
+import { z } from 'zod';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { envConfig } from '@/lib/env';
 import type { AIAnalysisRequest, AIAnalysisResponse } from '@/types';
+
+const aiResponseSchema = z.object({
+  score: z.number().min(0).max(100),
+  summary: z.string(),
+  risks: z.array(z.string()),
+  recommendation: z.enum(['strong_buy', 'buy', 'hold', 'avoid']),
+  estimated_total_cost: z.number(),
+  estimated_net_profit: z.number(),
+});
 
 function getGenAI() {
   if (!envConfig.GEMINI_API_KEY?.trim()) {
@@ -41,13 +51,14 @@ FORMATO DE RESPOSTA (JSON):
 export async function analyzeOpportunity(
   request: AIAnalysisRequest,
 ): Promise<AIAnalysisResponse> {
-  const genAI = getGenAI();
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-pro-preview-05-06',
-    systemInstruction: SYSTEM_PROMPT,
-  });
+  try {
+    const genAI = getGenAI();
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-pro-preview-05-06',
+      systemInstruction: SYSTEM_PROMPT,
+    });
 
-  const prompt = `Analise esta oportunidade de leilão:
+    const prompt = `Analise esta oportunidade de leilão:
 
 Categoria: ${request.category}
 Lance atual: R$ ${request.current_bid.toLocaleString('pt-BR')}
@@ -57,11 +68,18 @@ ${request.additional_context ? `Contexto adicional: ${request.additional_context
 
 Retorne APENAS o JSON de análise.`;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
 
-  const cleaned = text.replace(/```json\n?|```\n?/g, '').trim();
-  const parsed: AIAnalysisResponse = JSON.parse(cleaned);
-
-  return parsed;
+    const cleaned = text.replace(/```json\n?|```\n?/g, '').trim();
+    const raw = JSON.parse(cleaned) as unknown;
+    const parsed = aiResponseSchema.parse(raw);
+    return parsed as AIAnalysisResponse;
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      throw new Error(`Resposta da IA inválida: ${err.flatten().fieldErrors ? JSON.stringify(err.flatten().fieldErrors) : err.message}`);
+    }
+    if (err instanceof Error) throw err;
+    throw new Error('Erro ao analisar oportunidade com IA.');
+  }
 }

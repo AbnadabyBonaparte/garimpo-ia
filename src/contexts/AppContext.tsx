@@ -26,6 +26,7 @@ interface AppContextValue {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refetchProfile: () => Promise<void>;
   /* Theme */
   theme: Theme;
   toggleTheme: () => void;
@@ -128,6 +129,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const refetchProfile = useCallback(async () => {
+    if (!supabase) return;
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (s?.user) await fetchProfile(s.user.id);
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -138,6 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
+        refetchProfile,
         theme,
         toggleTheme,
       }}

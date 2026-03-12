@@ -10,6 +10,8 @@ import { FeedPage } from '@/app/routes/FeedPage';
 import { OpportunityDetailPage } from '@/app/routes/OpportunityDetailPage';
 import { LoginPage } from '@/app/routes/LoginPage';
 import { PricingPage } from '@/app/routes/PricingPage';
+import { AlertsPage } from '@/app/routes/AlertsPage';
+import { AdminOpportunityPage } from '@/app/routes/AdminOpportunityPage';
 
 export function App() {
   return (
@@ -24,8 +26,9 @@ export function App() {
                 <Route path="/opportunity/:id" element={<OpportunityDetailPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
-                {/* Future routes:
                 <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/admin/opportunities" element={<AdminOpportunityPage />} />
+                {/* Future routes:
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 */}

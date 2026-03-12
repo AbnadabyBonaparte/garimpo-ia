@@ -71,6 +71,16 @@ export interface Alert {
 
 export type AlertChannel = 'whatsapp' | 'email' | 'push' | 'in_app';
 
+/** User-defined alert rule: notify when opportunities match criteria */
+export interface AlertRule {
+  id: string;
+  user_id: string;
+  min_score: number;
+  categories: OpportunityCategory[];
+  states: string[];
+  created_at: string;
+}
+
 export interface AuctionSource {
   id: string;
   name: string;

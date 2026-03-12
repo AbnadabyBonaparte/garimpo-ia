@@ -67,7 +67,7 @@ const PLANS: {
 
 export function PricingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { profile } = useApp();
+  const { profile, refetchProfile } = useApp();
   const { addToast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<SubscriptionTier | null>(null);
 
@@ -78,13 +78,14 @@ export function PricingPage() {
     const success = searchParams.get('success');
     const cancel = searchParams.get('cancel');
     if (success === '1') {
-      addToast({ type: 'success', title: 'Assinatura realizada! Atualize a página se não vir sua nova assinatura.' });
+      addToast({ type: 'success', title: 'Assinatura realizada!' });
+      void refetchProfile();
       setSearchParams({}, { replace: true });
     } else if (cancel === '1') {
       addToast({ type: 'info', title: 'Checkout cancelado.' });
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, refetchProfile]);
 
   async function handleSubscribe(planId: SubscriptionTier) {
     if (planId === 'free') return;
