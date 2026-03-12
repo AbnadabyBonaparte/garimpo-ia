@@ -8,6 +8,7 @@
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { useApp } from '@/contexts/AppContext';
 import { OpportunityCard } from '@/components/cards/OpportunityCard';
@@ -23,6 +24,7 @@ const CATEGORIES: { value: OpportunityCategory; label: string }[] = [
 ];
 
 export function FeedPage() {
+  const navigate = useNavigate();
   const { isAuthenticated, profile } = useApp();
   const [selectedCategories, setSelectedCategories] = useState<OpportunityCategory[]>([]);
 
@@ -114,6 +116,8 @@ export function FeedPage() {
               key={opp.id}
               opportunity={opp}
               isUnlocked={!!isSubscriber}
+              onViewAnalysis={(oppId) => navigate(`/opportunity/${oppId}`)}
+              onSubscribe={() => navigate('/pricing')}
             />
           ))}
         </div>

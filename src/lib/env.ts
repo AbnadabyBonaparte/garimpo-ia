@@ -12,6 +12,7 @@ const envSchema = z.object({
   SUPABASE_ANON_KEY: z.string().optional().default(''),
   GEMINI_API_KEY: z.string().optional().default(''),
   STRIPE_PUBLIC_KEY: z.string().optional().default(''),
+  STRIPE_CHECKOUT_API_URL: z.string().optional().default(''),
   APP_URL: z.string().optional().default(''),
 });
 
@@ -21,6 +22,7 @@ function loadEnv() {
     SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ?? '',
     GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY ?? '',
     STRIPE_PUBLIC_KEY: import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '',
+    STRIPE_CHECKOUT_API_URL: import.meta.env.VITE_STRIPE_CHECKOUT_API_URL ?? '',
     APP_URL: import.meta.env.VITE_APP_URL ?? '',
   };
 
