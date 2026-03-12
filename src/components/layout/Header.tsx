@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/Button';
 import { useApp } from '@/contexts/AppContext';
 
 export function Header() {
-  const { theme, toggleTheme, isAuthenticated, profile } = useApp();
+  const { theme, toggleTheme, isAuthenticated } = useApp();
 
   return (
-    <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-background-surface/80 backdrop-blur-md">
+    <header className="bg-background-surface/80 sticky top-0 z-[var(--z-sticky)] border-b border-border backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         {/* ── Logo ── */}
         <a href="/" className="flex items-center gap-2">
