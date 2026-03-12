@@ -15,6 +15,7 @@ import {
   Cell,
 } from 'recharts';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useScraperMetrics } from '@/hooks/useScraperMetrics';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { getCategoryLabel, formatBRL } from '@/lib/utils';
 
@@ -22,6 +23,7 @@ const CHART_COLORS = ['var(--color-cyan)', 'var(--color-amber)', 'var(--color-gr
 
 export function AnalyticsPage() {
   const { data, loading, error } = useAnalytics();
+  const { data: scraperData, loading: scraperLoading } = useScraperMetrics();
 
   if (loading) {
     return (
@@ -71,6 +73,45 @@ export function AnalyticsPage() {
           <p className="font-display text-2xl font-bold text-foreground">{byState.length}</p>
         </div>
       </div>
+
+      {!scraperLoading && (scraperData.totalRuns > 0 || scraperData.aiAnalysisCount > 0) && (
+        <div className="rounded-lg border border-border bg-background-surface p-4">
+          <h2 className="font-body text-sm font-medium text-foreground-muted mb-4">
+            Mining Engine
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div>
+              <p className="font-body text-xs text-foreground-muted">Total inserido por scrapers</p>
+              <p className="font-display text-xl font-bold text-foreground">{scraperData.totalInserted}</p>
+            </div>
+            <div>
+              <p className="font-body text-xs text-foreground-muted">Taxa de sucesso</p>
+              <p className="font-display text-xl font-bold text-cyan">{scraperData.successRate.toFixed(0)}%</p>
+            </div>
+            <div>
+              <p className="font-body text-xs text-foreground-muted">Duplicatas ignoradas</p>
+              <p className="font-display text-xl font-bold text-foreground">{scraperData.totalDuplicatesSkipped}</p>
+            </div>
+            <div>
+              <p className="font-body text-xs text-foreground-muted">Análises IA</p>
+              <p className="font-display text-xl font-bold text-green">{scraperData.aiAnalysisCount}</p>
+            </div>
+            <div>
+              <p className="font-body text-xs text-foreground-muted">Execuções</p>
+              <p className="font-display text-xl font-bold text-foreground">{scraperData.totalRuns}</p>
+            </div>
+          </div>
+          {scraperData.bySource.length > 0 && (
+            <ul className="mt-4 space-y-1 font-body text-sm text-foreground-muted">
+              {scraperData.bySource.map((s) => (
+                <li key={s.source_id}>
+                  {s.source_name}: {s.inserted} inseridas em {s.runs} execuções
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="rounded-lg border border-border bg-background-surface p-4">

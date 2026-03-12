@@ -7,6 +7,8 @@
 
 import { supabase } from '@/lib/supabaseClient';
 import { triggerRunAiAnalysis, isRunAiAnalysisConfigured } from '@/services/runAiAnalysis';
+import { validateOpportunityPayload, filterValidPayloads } from '@/services/opportunityValidation';
+import { findDuplicateOpportunity, filterNewOpportunities } from '@/services/opportunityDeduplication';
 import type {
   OpportunityCategory,
   OpportunityIngestionPayload,
@@ -80,17 +82,32 @@ export function normalizeOpportunityData(payload: OpportunityIngestionPayload): 
 export interface CreateOpportunityOptions {
   /** Trigger run-ai-analysis after insert (default true when URL configured). */
   triggerAi?: boolean;
+  /** Skip insert if duplicate exists (auction_url, title, source, closes_at). */
+  skipDuplicate?: boolean;
+  /** Validate payload before insert; return null if invalid. */
+  validate?: boolean;
 }
 
 /**
  * Insert one opportunity and optionally trigger AI analysis.
- * Returns the new opportunity id or null on failure.
+ * Returns the new opportunity id or null on failure or if duplicate skipped.
  */
 export async function createOpportunity(
   payload: OpportunityIngestionPayload,
   options: CreateOpportunityOptions = {},
 ): Promise<{ id: string } | null> {
   if (!supabase) return null;
+
+  if (options.validate) {
+    const { valid } = validateOpportunityPayload(payload);
+    if (!valid) return null;
+  }
+
+  if (options.skipDuplicate) {
+    const existingId = await findDuplicateOpportunity(payload);
+    if (existingId) return null;
+  }
+
   const row = normalizeOpportunityData(payload);
   const { data, error } = await supabase
     .from('opportunities')
@@ -111,10 +128,13 @@ export async function createOpportunity(
 export interface BulkInsertResult {
   ids: string[];
   errors: { index: number; message: string }[];
+  duplicatesSkipped?: number;
+  invalidSkipped?: number;
 }
 
 /**
  * Insert multiple opportunities and trigger AI analysis for each (non-blocking).
+ * When validate: true, invalid payloads are skipped. When skipDuplicate: true, duplicates are skipped.
  */
 export async function bulkInsertOpportunities(
   payloads: OpportunityIngestionPayload[],
@@ -122,13 +142,27 @@ export async function bulkInsertOpportunities(
 ): Promise<BulkInsertResult> {
   const ids: string[] = [];
   const errors: { index: number; message: string }[] = [];
+  let duplicatesSkipped = 0;
+  let invalidSkipped = 0;
 
   if (!supabase) {
     payloads.forEach((_, i) => errors.push({ index: i, message: 'Supabase not configured' }));
     return { ids, errors };
   }
 
-  const rows = payloads.map((p) => normalizeOpportunityData(p));
+  let toInsert = payloads;
+  if (options.validate) {
+    const { valid, invalid } = filterValidPayloads(payloads);
+    invalidSkipped = invalid.length;
+    toInsert = valid;
+  }
+  if (options.skipDuplicate) {
+    const before = toInsert.length;
+    toInsert = await filterNewOpportunities(toInsert);
+    duplicatesSkipped = before - toInsert.length;
+  }
+
+  const rows = toInsert.map((p) => normalizeOpportunityData(p));
 
   for (let i = 0; i < rows.length; i++) {
     const { data, error } = await supabase
@@ -149,5 +183,10 @@ export async function bulkInsertOpportunities(
     }
   }
 
-  return { ids, errors };
+  return {
+    ids,
+    errors,
+    ...(duplicatesSkipped > 0 && { duplicatesSkipped }),
+    ...(invalidSkipped > 0 && { invalidSkipped }),
+  };
 }
