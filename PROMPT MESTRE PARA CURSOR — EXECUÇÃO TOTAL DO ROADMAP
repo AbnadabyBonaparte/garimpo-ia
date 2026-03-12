@@ -1,0 +1,414 @@
+You are acting as a Senior Staff Software Engineer, Systems Architect, Security Auditor, and Startup CTO.
+
+Your mission is to transform the GARIMPO IA codebase into a production-grade platform according to the document:
+
+"BILLION_DOLLAR_TECHNICAL_ROADMAP.md"
+
+You must analyze the repository and execute improvements systematically.
+
+IMPORTANT RULES
+
+1. Do NOT assume documentation is correct.
+2. Trust the codebase first.
+3. Validate architecture against the roadmap.
+4. Identify gaps before writing code.
+5. Work incrementally and safely.
+6. Never break existing functionality.
+7. Prefer simple and robust implementations.
+
+------------------------------------------------
+
+STEP 1 — REPOSITORY DISCOVERY
+
+Scan the entire repository.
+
+Produce a structured map including:
+
+• folder structure
+• pages/routes
+• hooks
+• services
+• scrapers
+• edge functions
+• database schema
+• migrations
+• tests
+• configuration files
+• environment variables
+
+Output a section called:
+
+PROJECT MAP
+
+------------------------------------------------
+
+STEP 2 — ARCHITECTURE VALIDATION
+
+Compare the real architecture with the roadmap.
+
+Expected layers:
+
+Frontend
+↓
+API / Edge Functions
+↓
+Database
+↓
+Data Pipeline
+↓
+AI Engine
+↓
+Scraper Engine
+↓
+Analytics Layer
+
+Identify:
+
+• missing layers
+• misplaced logic
+• coupling problems
+• architectural inconsistencies
+
+Output section:
+
+ARCHITECTURE GAP ANALYSIS
+
+------------------------------------------------
+
+STEP 3 — SECURITY AUDIT
+
+Audit the entire system.
+
+Check:
+
+Edge Functions
+Authentication
+JWT validation
+RLS policies
+Webhook security
+Secrets handling
+CORS configuration
+Rate limiting
+Payload validation
+
+Identify vulnerabilities.
+
+Implement fixes when safe.
+
+Output section:
+
+SECURITY FIXES
+
+Examples expected:
+
+• enforce JWT on sensitive functions
+• restrict CORS
+• add rate limiting
+• validate payload schemas
+• protect AI endpoints
+
+------------------------------------------------
+
+STEP 4 — DATA PIPELINE HARDENING
+
+Inspect the ingestion pipeline.
+
+Check:
+
+• deduplication logic
+• retry mechanisms
+• batch insertion
+• error handling
+• idempotency
+
+If missing, implement:
+
+• opportunity_hash
+• unique DB index
+• batch insert
+• retry with exponential backoff
+
+Output section:
+
+DATA PIPELINE IMPROVEMENTS
+
+------------------------------------------------
+
+STEP 5 — JOB QUEUE
+
+If the project does not have a proper job queue:
+
+Introduce one.
+
+Acceptable implementations:
+
+• pg-boss
+• BullMQ
+• Supabase queue
+• QStash
+
+Use it for:
+
+• scraping jobs
+• AI analysis jobs
+• alert generation
+
+Output section:
+
+JOB QUEUE IMPLEMENTATION
+
+------------------------------------------------
+
+STEP 6 — SCRAPER ENGINE
+
+Analyze existing scraper system.
+
+Verify:
+
+• scraper interface
+• normalization
+• deduplication
+• validation
+• monitoring
+
+Implement missing features:
+
+• proxy rotation
+• request throttling
+• retry
+• error logging
+
+Output section:
+
+SCRAPER ENGINE IMPROVEMENTS
+
+------------------------------------------------
+
+STEP 7 — AI PIPELINE
+
+Audit AI integration.
+
+Verify:
+
+• prompt structure
+• model versioning
+• response validation
+• cost control
+• caching
+
+Implement if missing:
+
+• prompt_version field
+• model_version field
+• response schema validation
+• fallback models
+
+Output section:
+
+AI PIPELINE IMPROVEMENTS
+
+------------------------------------------------
+
+STEP 8 — ALERT ENGINE
+
+Validate alert system.
+
+Check:
+
+• rule matching logic
+• deduplication
+• performance
+• notification triggers
+
+Implement improvements:
+
+• indexed queries
+• async notification processing
+
+Output section:
+
+ALERT ENGINE IMPROVEMENTS
+
+------------------------------------------------
+
+STEP 9 — NOTIFICATION SYSTEM
+
+Check supported channels.
+
+Ensure architecture supports:
+
+• in-app alerts
+• email notifications
+• webhook notifications
+
+Design for future:
+
+• WhatsApp
+• Telegram
+
+Output section:
+
+NOTIFICATION SYSTEM IMPROVEMENTS
+
+------------------------------------------------
+
+STEP 10 — ANALYTICS LAYER
+
+Analyze analytics implementation.
+
+Check if analytics runs on client side.
+
+If so:
+
+Create server-side aggregation using:
+
+• materialized views
+• SQL aggregations
+• cached queries
+
+Output section:
+
+ANALYTICS ARCHITECTURE IMPROVEMENTS
+
+------------------------------------------------
+
+STEP 11 — OBSERVABILITY
+
+Ensure production observability exists.
+
+Add:
+
+• structured logs
+• error tracking (Sentry or equivalent)
+• scraper run metrics
+• AI cost metrics
+
+Output section:
+
+OBSERVABILITY IMPROVEMENTS
+
+------------------------------------------------
+
+STEP 12 — TEST INFRASTRUCTURE
+
+If tests are missing:
+
+Create baseline tests.
+
+Required coverage:
+
+• unit tests for core services
+• pipeline tests
+• integration tests
+
+Focus first on:
+
+• ingestion
+• AI scoring
+• alert engine
+
+Output section:
+
+TEST IMPLEMENTATION
+
+------------------------------------------------
+
+STEP 13 — PERFORMANCE IMPROVEMENTS
+
+Identify performance risks.
+
+Optimize:
+
+• database queries
+• indexes
+• caching
+• batch processing
+
+Output section:
+
+PERFORMANCE OPTIMIZATION
+
+------------------------------------------------
+
+STEP 14 — DEVOPS
+
+Ensure the repository has:
+
+• CI pipeline
+• linting
+• type checking
+• test execution
+• build validation
+
+If missing, create a GitHub Actions pipeline.
+
+Output section:
+
+DEVOPS IMPROVEMENTS
+
+------------------------------------------------
+
+STEP 15 — DATA MOAT FOUNDATION
+
+Ensure the database captures strategic historical data.
+
+Add tables or fields if needed:
+
+• price_history
+• auction_history
+• score_history
+• opportunity_lifecycle
+
+Output section:
+
+DATA MOAT IMPLEMENTATION
+
+------------------------------------------------
+
+STEP 16 — EXECUTION PLAN
+
+After all analysis, generate a prioritized execution plan.
+
+Structure:
+
+PHASE 1 — Critical fixes  
+PHASE 2 — Reliability improvements  
+PHASE 3 — Data platform features  
+PHASE 4 — Intelligence layer  
+
+Each phase must include:
+
+• tasks
+• affected files
+• expected result
+
+Output section:
+
+EXECUTION ROADMAP
+
+------------------------------------------------
+
+FINAL OUTPUT FORMAT
+
+Return the audit in the following structure:
+
+1. PROJECT MAP
+2. ARCHITECTURE GAP ANALYSIS
+3. SECURITY FIXES
+4. DATA PIPELINE IMPROVEMENTS
+5. JOB QUEUE IMPLEMENTATION
+6. SCRAPER ENGINE IMPROVEMENTS
+7. AI PIPELINE IMPROVEMENTS
+8. ALERT ENGINE IMPROVEMENTS
+9. NOTIFICATION SYSTEM IMPROVEMENTS
+10. ANALYTICS ARCHITECTURE IMPROVEMENTS
+11. OBSERVABILITY IMPROVEMENTS
+12. TEST IMPLEMENTATION
+13. PERFORMANCE OPTIMIZATION
+14. DEVOPS IMPROVEMENTS
+15. DATA MOAT IMPLEMENTATION
+16. EXECUTION ROADMAP
+
+Be extremely rigorous.
+
+Your goal is to transform GARIMPO IA from an MVP into a robust production platform.
