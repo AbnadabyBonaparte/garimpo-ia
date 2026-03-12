@@ -49,7 +49,12 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Opportunity not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  const prompt = `Analise esta oportunidade de leilão. Retorne APENAS um JSON válido, sem markdown, com as chaves: score (0-100), summary (string), risks (array de strings), recommendation ("strong_buy"|"buy"|"hold"|"avoid"), estimated_total_cost (number), estimated_net_profit (number).
+  // Cache: skip Gemini if ai_analysis and score already set
+  let score = Number(opp.score) ?? 0;
+  let analysisText = (opp.ai_analysis as string) ?? '';
+
+  if (!analysisText?.trim() || score <= 0) {
+    const prompt = `Analise esta oportunidade de leilão. Retorne APENAS um JSON válido, sem markdown, com as chaves: score (0-100), summary (string), risks (array de strings), recommendation ("strong_buy"|"buy"|"hold"|"avoid"), estimated_total_cost (number), estimated_net_profit (number).
 
 Categoria: ${opp.category}
 Lance atual: R$ ${Number(opp.current_bid).toLocaleString('pt-BR')}
@@ -81,8 +86,8 @@ ${opp.risk_notes ? `Riscos conhecidos: ${opp.risk_notes}` : ''}`;
     const cleaned = text.replace(/```json\n?|```\n?/g, '').trim();
     const parsed = JSON.parse(cleaned) as { score?: number; summary?: string; risks?: string[]; recommendation?: string; estimated_total_cost?: number; estimated_net_profit?: number };
 
-    const score = Math.min(100, Math.max(0, Number(parsed.score) ?? 0));
-    const analysisText = [
+    score = Math.min(100, Math.max(0, Number(parsed.score) ?? 0));
+    analysisText = [
       parsed.summary,
       parsed.risks?.length ? `Riscos: ${parsed.risks.join('; ')}` : '',
       parsed.recommendation ? `Recomendação: ${parsed.recommendation}` : '',
@@ -98,9 +103,32 @@ ${opp.risk_notes ? `Riscos conhecidos: ${opp.risk_notes}` : ''}`;
     if (updateErr) {
       return new Response(JSON.stringify({ error: updateErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-
-    return new Response(JSON.stringify({ success: true, score }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
+  }
+
+  // Alerts engine: find rules that match; insert in_app alerts (prevent duplicates)
+  const oppCategory = (opp.category as string) ?? '';
+  const oppState = (opp.state as string) ?? '';
+  const { data: rules } = await supabase.from('alert_rules').select('id, user_id, min_score, categories, states');
+  if (rules?.length) {
+    for (const rule of rules) {
+      const minScore = Number(rule.min_score) ?? 0;
+      if (score < minScore) continue;
+      const categories = (rule.categories as string[]) ?? [];
+      if (categories.length > 0 && !categories.includes(oppCategory)) continue;
+      const states = (rule.states as string[]) ?? [];
+      if (states.length > 0 && !states.some((s: string) => oppState.toUpperCase() === String(s).toUpperCase())) continue;
+      const { count } = await supabase.from('alerts').select('id', { count: 'exact', head: true }).eq('user_id', rule.user_id).eq('opportunity_id', opportunityId).eq('channel', 'in_app');
+      if (count && count > 0) continue;
+      await supabase.from('alerts').insert({
+        user_id: rule.user_id,
+        opportunity_id: opportunityId,
+        channel: 'in_app',
+      });
+    }
+  }
+
+  return new Response(JSON.stringify({ success: true, score }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 });

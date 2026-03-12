@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/lib/supabaseClient';
+import { triggerRunAiAnalysis, isRunAiAnalysisConfigured } from '@/services/runAiAnalysis';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import type { OpportunityCategory } from '@/types';
@@ -53,25 +54,36 @@ export function AdminOpportunityPage() {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from('opportunities').insert({
-        title: form.title.trim(),
-        category: form.category,
-        location: form.location.trim(),
-        state: form.state.trim().toUpperCase().slice(0, 2),
-        year: form.year ? Number(form.year) : null,
-        current_bid,
-        market_value,
-        auction_source: form.auction_source.trim() || 'Manual',
-        auction_url: form.auction_url.trim() || '',
-        closes_at: closesAt,
-        score: 0,
-        risk_level: 'medium',
-        liquidity: 'medium',
-      });
+      const { data: inserted, error } = await supabase
+        .from('opportunities')
+        .insert({
+          title: form.title.trim(),
+          category: form.category,
+          location: form.location.trim(),
+          state: form.state.trim().toUpperCase().slice(0, 2),
+          year: form.year ? Number(form.year) : null,
+          current_bid,
+          market_value,
+          auction_source: form.auction_source.trim() || 'Manual',
+          auction_url: form.auction_url.trim() || '',
+          closes_at: closesAt,
+          score: 0,
+          risk_level: 'medium',
+          liquidity: 'medium',
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
-      addToast({ type: 'success', title: 'Oportunidade inserida. Score e análise podem ser preenchidos pelo pipeline.' });
+      addToast({ type: 'success', title: 'Oportunidade inserida.' });
       setForm(defaultForm);
+
+      if (inserted?.id && isRunAiAnalysisConfigured()) {
+        triggerRunAiAnalysis(inserted.id).then(
+          () => addToast({ type: 'success', title: 'Análise IA em andamento. Score e alertas serão atualizados em breve.' }),
+          () => { /* non-blocking */ },
+        );
+      }
     } catch (err) {
       addToast({ type: 'error', title: err instanceof Error ? err.message : 'Erro ao inserir.' });
     } finally {

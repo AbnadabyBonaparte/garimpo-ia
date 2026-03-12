@@ -11,7 +11,9 @@ import { OpportunityDetailPage } from '@/app/routes/OpportunityDetailPage';
 import { LoginPage } from '@/app/routes/LoginPage';
 import { PricingPage } from '@/app/routes/PricingPage';
 import { AlertsPage } from '@/app/routes/AlertsPage';
+import { AnalyticsPage } from '@/app/routes/AnalyticsPage';
 import { AdminOpportunityPage } from '@/app/routes/AdminOpportunityPage';
+import { DashboardPage } from '@/app/routes/DashboardPage';
 
 export function App() {
   return (
@@ -27,11 +29,9 @@ export function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />
-                <Route path="/admin/opportunities" element={<AdminOpportunityPage />} />
-                {/* Future routes:
                 <Route path="/analytics" element={<AnalyticsPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                */}
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/admin/opportunities" element={<AdminOpportunityPage />} />
               </Routes>
             </main>
           </div>

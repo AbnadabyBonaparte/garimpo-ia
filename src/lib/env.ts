@@ -13,6 +13,7 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional().default(''),
   STRIPE_PUBLIC_KEY: z.string().optional().default(''),
   STRIPE_CHECKOUT_API_URL: z.string().optional().default(''),
+  RUN_AI_ANALYSIS_API_URL: z.string().optional().default(''),
   APP_URL: z.string().optional().default(''),
 });
 
@@ -23,6 +24,7 @@ function loadEnv() {
     GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY ?? '',
     STRIPE_PUBLIC_KEY: import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '',
     STRIPE_CHECKOUT_API_URL: import.meta.env.VITE_STRIPE_CHECKOUT_API_URL ?? '',
+    RUN_AI_ANALYSIS_API_URL: import.meta.env.VITE_RUN_AI_ANALYSIS_API_URL ?? '',
     APP_URL: import.meta.env.VITE_APP_URL ?? '',
   };
 

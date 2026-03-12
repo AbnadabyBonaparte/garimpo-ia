@@ -5,9 +5,11 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
-import { Lock, ExternalLink, Clock, ArrowLeft } from 'lucide-react';
+import { Lock, ExternalLink, Clock, ArrowLeft, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useOpportunity } from '@/hooks/useOpportunity';
+import { useWatchlist } from '@/hooks/useWatchlist';
 import { useApp } from '@/contexts/AppContext';
+import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ErrorState } from '@/components/ui/StateDisplay';
@@ -103,6 +105,8 @@ export function OpportunityDetailPage() {
   const navigate = useNavigate();
   const { data: opportunity, isLoading, isError, isNotFound, error, refetch } = useOpportunity(id);
   const { profile, isAuthenticated } = useApp();
+  const { isOnWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
+  const { addToast } = useToast();
 
   const isSubscriber = isAuthenticated && profile?.subscription_tier !== 'free';
 
@@ -131,10 +135,35 @@ export function OpportunityDetailPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <Button variant="ghost" size="sm" className="mb-6" onClick={() => navigate('/')}>
-        <ArrowLeft className="h-4 w-4" />
-        Voltar ao feed
-      </Button>
+      <div className="mb-6 flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+          <ArrowLeft className="h-4 w-4" />
+          Voltar ao feed
+        </Button>
+        {isAuthenticated && id && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const saved = isOnWatchlist(id);
+              const ok = saved ? await removeFromWatchlist(id) : await addToWatchlist(id);
+              if (ok) addToast({ type: 'success', title: saved ? 'Removido da lista' : 'Salvo na lista' });
+            }}
+          >
+            {isOnWatchlist(id) ? (
+              <>
+                <BookmarkCheck className="h-4 w-4" />
+                Na lista
+              </>
+            ) : (
+              <>
+                <Bookmark className="h-4 w-4" />
+                Salvar
+              </>
+            )}
+          </Button>
+        )}
+      </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <span className="rounded bg-background-surface-alt px-2 py-1 text-lg">

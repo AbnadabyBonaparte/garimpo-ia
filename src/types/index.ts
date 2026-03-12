@@ -151,3 +151,45 @@ export interface ToastMessage {
   description?: string;
   duration?: number;
 }
+
+/** Raw payload for opportunity ingestion (API / script / admin). */
+export interface OpportunityIngestionPayload {
+  title: string;
+  category?: OpportunityCategory | string;
+  location?: string;
+  state?: string;
+  year?: number | string | null;
+  current_bid: number | string;
+  market_value: number | string;
+  auction_source?: string;
+  auction_url?: string;
+  closes_at?: string | number | Date;
+  risk_level?: RiskLevel;
+  risk_notes?: string | null;
+  liquidity?: LiquidityLevel;
+}
+
+/** Normalized row for opportunities insert. */
+export interface OpportunityInsertRow {
+  title: string;
+  category: OpportunityCategory;
+  location: string;
+  state: string;
+  year: number | null;
+  current_bid: number;
+  market_value: number;
+  auction_source: string;
+  auction_url: string;
+  closes_at: string;
+  score: number;
+  risk_level: RiskLevel;
+  risk_notes: string | null;
+  liquidity: LiquidityLevel;
+}
+
+export interface WatchlistItem {
+  id: string;
+  user_id: string;
+  opportunity_id: string;
+  created_at: string;
+}

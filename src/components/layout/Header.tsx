@@ -1,15 +1,18 @@
 /**
  * GARIMPO IA™ — Header Component
- * LEI 4 ALSHAM: Theme toggle integrado.
+ * LEI 4 ALSHAM: Theme toggle integrado. Notificações in-app via useAlerts.
  */
 
 import { Link } from 'react-router-dom';
 import { Sun, Moon, Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { useApp } from '@/contexts/AppContext';
+import { useAlerts } from '@/hooks/useAlerts';
 
 export function Header() {
   const { theme, toggleTheme, isAuthenticated } = useApp();
+  const { unreadCount } = useAlerts();
 
   return (
     <header className="bg-background-surface/80 sticky top-0 z-[var(--z-sticky)] border-b border-border backdrop-blur-md">
@@ -41,6 +44,14 @@ export function Header() {
           >
             Analytics
           </Link>
+          {isAuthenticated && (
+            <Link
+              to="/dashboard"
+              className="font-body text-sm text-foreground-muted transition-colors hover:text-foreground"
+            >
+              Painel
+            </Link>
+          )}
         </nav>
 
         {/* ── Actions ── */}
@@ -55,11 +66,20 @@ export function Header() {
 
           {isAuthenticated ? (
             <>
-              <Button variant="ghost" size="icon">
-                <Bell className="h-4 w-4" />
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/alerts" className="relative">
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </Badge>
+                  )}
+                </Link>
               </Button>
-              <Button variant="ghost" size="icon">
-                <User className="h-4 w-4" />
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/dashboard">
+                  <User className="h-4 w-4" />
+                </Link>
               </Button>
             </>
           ) : (

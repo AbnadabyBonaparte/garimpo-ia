@@ -251,4 +251,27 @@ Será gerado em seguida:
 
 ---
 
-*Fim do documento de auditoria. O código gerado (SQL, hooks, AlertsPage, admin, AI pipeline) segue na implementação abaixo.*
+---
+
+# PHASE 2 IMPLEMENTATION STATUS (pós-resumo)
+
+**Concluído:**
+
+- **run-ai-analysis** — Estrutura corrigida: cache (skip Gemini se `ai_analysis` e score já existem), try/catch fechado corretamente, motor de alertas (alert_rules → inserts em `alerts` com channel `in_app`) após atualizar opportunity.
+- **Admin → run-ai-analysis** — Após insert de oportunidade, retorno com `.select('id').single()`; se `VITE_RUN_AI_ANALYSIS_API_URL` configurada, chama `triggerRunAiAnalysis(inserted.id)` em background. Serviço `src/services/runAiAnalysis.ts`; env em `env.ts` e `.env.example`.
+- **Notificações in-app** — Hook `useAlerts` (lista alertas do usuário, `markAsRead`, `unreadCount`). Header: ícone Bell com Link para `/alerts` e Badge com contagem de não lidos.
+
+**Próximas 10 tarefas (priorizadas):**
+
+1. **AlertsPage: marcar como lido** — Ao abrir um alerta ou ao clicar no link para a oportunidade, chamar `markAsRead(alert.id)`. Arquivos: AlertsPage.tsx, useAlerts. Resultado: contagem no Header atualiza.
+2. **Vercel: variável RUN_AI_ANALYSIS** — Configurar `VITE_RUN_AI_ANALYSIS_API_URL` no dashboard Vercel (URL da Edge Function run-ai-analysis). Resultado: Admin em produção dispara análise.
+3. **Revalidar profile após checkout** — Já feito (refetchProfile em PricingPage ?success=1). Revisar se está estável.
+4. **Otimizar run-ai-analysis** — Evitar inserts duplicados em `alerts` (ex.: unique constraint user_id + opportunity_id + channel ou checagem antes de insert). Arquivos: run-ai-analysis/index.ts, migração se necessário. Resultado: Um alerta por regra/oportunidade.
+5. **Analytics page** — Esboço da rota /analytics (ou placeholder) para não quebrar link do Header. Arquivos: App.tsx, AnalyticsPage.tsx. Resultado: Navegação consistente.
+6. **Tratamento de erro em triggerRunAiAnalysis** — Admin já chama em background; opcional: toast de falha se análise falhar. Arquivos: AdminOpportunityPage.tsx. Resultado: Feedback quando Edge Function falha.
+7. **Remover dependências não usadas** — recharts, Radix não usados (dialog, dropdown, toast, tooltip) se confirmado. Arquivos: package.json. Resultado: Bundle menor.
+8. **Email-ready para alertas** — Estrutura para canal `email`: quando alert_rules tiverem email habilitado, enfileirar ou chamar Edge Function de envio (ex.: Resend). Arquivos: run-ai-analysis ou nova function, tipos. Resultado: Arquitetura pronta para email.
+9. **Índices DB** — Índice em `alerts(user_id, read_at)` para listagem rápida; em `opportunities(score, category, state)` se ainda não existir. SQL em migração. Resultado: Queries mais rápidas.
+10. **Testes E2E ou manuais** — Fluxo completo: Login → Admin insert → run-ai-analysis → alert_rules match → alerta em /alerts → Header badge → marcar lido. Resultado: Garantia de fluxo.
+
+*Fim do documento de auditoria. O código gerado (SQL, hooks, AlertsPage, admin, AI pipeline) segue na implementação acima.*
