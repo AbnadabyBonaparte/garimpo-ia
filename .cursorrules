@@ -1,0 +1,28 @@
+# Cursor Rules — GARIMPO IA™
+
+## 6 Leis Sagradas (INVIOLÁVEIS)
+
+1. **ZERO CORES HARDCODED**: Toda cor via CSS vars em `src/styles/theme.css`. Nenhum hex em .tsx/.ts.
+2. **COMPONENTES UI PADRONIZADOS**: `src/components/ui/` segue shadcn/ui + CVA. Nunca modificar, só estender.
+3. **DADOS 100% REAIS**: Zero mock/fake/placeholder. SSOT: `src/lib/supabaseClient.ts`.
+4. **TEMAS DINÂMICOS**: Dark/Light via `data-theme`. Toggle persiste em localStorage.
+5. **ESTADOS UI COMPLETOS**: Toda página com dados → Loading (Skeleton) + Error (retry) + Empty (ação).
+6. **ESTRUTURA CANÔNICA**: Sem duplicações. SSOT para tudo.
+
+## Stack
+React 19 · TypeScript 5.8 · Vite 6 · Tailwind CSS · Supabase · Gemini 2.5 Pro · Stripe · Framer Motion
+
+## Tailwind: Usar APENAS
+- `bg-background-deep`, `bg-background-surface`, `bg-background-surface-alt`
+- `text-foreground`, `text-foreground-muted`
+- `text-amber`, `text-cyan`, `text-green`, `text-red`
+- `border-border`
+- NUNCA: `bg-white`, `bg-black`, `bg-gray-*`, `text-white`, `text-gray-*`
+
+## Tipografia
+- `font-display` = Space Grotesk (títulos)
+- `font-body` = Inter (interface)
+- `font-mono-data` = JetBrains Mono (valores financeiros)
+
+## Commits
+`<type>: <description>` + bullets + `BLOCO X - <Nome> ✅`
