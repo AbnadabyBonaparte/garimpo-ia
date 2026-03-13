@@ -1,8 +1,8 @@
 // GARIMPO IA™ — Create Stripe Checkout Session (Supabase Edge Function)
 // POST body: { planId: 'explorer' | 'hunter' | 'miner' }
-// Headers: Authorization: Bearer <supabase_jwt> (optional; if present, metadata.user_id is set for webhook)
+// Headers: Authorization: Bearer <supabase_jwt> (optional)
 // Returns: { url: string }
-// Env: STRIPE_SECRET_KEY, STRIPE_PRICE_EXPLORER, STRIPE_PRICE_HUNTER, STRIPE_PRICE_MINER, APP_URL
+// Env: STRIPE_SECRET_KEY, STRIPE_PRICE_EXPLORER, STRIPE_PRICE_HUNTER, STRIPE_PRICE_MINER, APP_URL, ALLOWED_ORIGIN
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -11,6 +11,7 @@ const STRIPE_SECRET = Deno.env.get('STRIPE_SECRET_KEY');
 const APP_URL = Deno.env.get('APP_URL') || 'http://localhost:5173';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') ?? 'http://localhost:5173';
 
 const PRICE_IDS: Record<string, string> = {
   explorer: Deno.env.get('STRIPE_PRICE_EXPLORER') || '',
@@ -19,7 +20,7 @@ const PRICE_IDS: Record<string, string> = {
 };
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
@@ -53,7 +54,7 @@ serve(async (req) => {
   try {
     const { planId } = (await req.json()) as { planId?: string };
     if (!planId || !PRICE_IDS[planId]) {
-      return new Response(JSON.stringify({ error: 'Invalid planId' }), {
+      return new Response(JSON.stringify({ error: 'planId inválido' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -61,18 +62,18 @@ serve(async (req) => {
 
     const priceId = PRICE_IDS[planId];
     if (!priceId) {
-      return new Response(JSON.stringify({ error: 'Price not configured for plan' }), {
+      return new Response(JSON.stringify({ error: 'Preço não configurado para este plano' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const params: Record<string, string> = {
-      'mode': 'subscription',
+      mode: 'subscription',
       'line_items[0][price]': priceId,
       'line_items[0][quantity]': '1',
-      'success_url': `${APP_URL}/pricing?success=1`,
-      'cancel_url': `${APP_URL}/pricing?cancel=1`,
+      success_url: `${APP_URL}/pricing?success=1`,
+      cancel_url: `${APP_URL}/pricing?cancel=1`,
     };
     if (userId) {
       params['metadata[user_id]'] = userId;
