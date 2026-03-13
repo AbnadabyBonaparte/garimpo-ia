@@ -3,6 +3,9 @@
  *
  * LEI 3 ALSHAM: Dados 100% reais do Supabase.
  * LEI 5 ALSHAM: Retorna loading, error, e empty states.
+ *
+ * FIX: Dependency array usa JSON.stringify para evitar loop infinito
+ *      quando categories/states são arrays novos a cada render.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -35,8 +38,13 @@ export function useOpportunities(filters: Partial<FilterOptions> = {}) {
 
   const mergedFilters = { ...DEFAULT_FILTERS, ...filters };
 
+  // Serializar filtros para evitar loop infinito com arrays novos a cada render
+  const filtersKey = JSON.stringify(mergedFilters);
+
   const fetchOpportunities = useCallback(
     async (page = 1) => {
+      const f: FilterOptions = JSON.parse(filtersKey) as FilterOptions;
+
       if (!supabase) {
         setState({
           data: { data: [], total: 0, page: 1, per_page: PAGE_SIZE, has_more: false },
@@ -51,20 +59,18 @@ export function useOpportunities(filters: Partial<FilterOptions> = {}) {
         let query = supabase
           .from('opportunities')
           .select('*', { count: 'exact' })
-          .gte('score', mergedFilters.min_score)
-          .lte('score', mergedFilters.max_score)
-          .gte('roi_percentage', mergedFilters.min_roi)
-          .order(mergedFilters.sort_by, {
-            ascending: mergedFilters.sort_order === 'asc',
-          })
+          .gte('score', f.min_score)
+          .lte('score', f.max_score)
+          .gte('roi_percentage', f.min_roi)
+          .order(f.sort_by, { ascending: f.sort_order === 'asc' })
           .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
-        if (mergedFilters.categories.length > 0) {
-          query = query.in('category', mergedFilters.categories);
+        if (f.categories.length > 0) {
+          query = query.in('category', f.categories);
         }
 
-        if (mergedFilters.states.length > 0) {
-          query = query.in('state', mergedFilters.states);
+        if (f.states.length > 0) {
+          query = query.in('state', f.states);
         }
 
         const { data, error, count } = await query;
@@ -87,15 +93,7 @@ export function useOpportunities(filters: Partial<FilterOptions> = {}) {
         setState({ data: null, status: 'error', error: message });
       }
     },
-    [
-      mergedFilters.min_score,
-      mergedFilters.max_score,
-      mergedFilters.min_roi,
-      mergedFilters.sort_by,
-      mergedFilters.sort_order,
-      mergedFilters.categories,
-      mergedFilters.states,
-    ],
+    [filtersKey], // string serializada — sem re-render loop
   );
 
   useEffect(() => {
