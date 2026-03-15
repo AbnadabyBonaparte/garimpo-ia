@@ -1,73 +1,94 @@
 /**
- * GARIMPO IA™ — Pricing Page
+ * GARIMPO IA™ — Pricing Page (Redesign Supremo)
  *
- * Plan list (Free, Explorer, Hunter, Miner). CTA → Stripe Checkout when configured.
+ * 4 planos com PricingCard component. Hunter destacado.
+ * Integração com Stripe Checkout via Edge Function.
  */
 
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Check, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Shield, Zap } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/contexts/ToastContext';
-import { Button } from '@/components/ui/Button';
+import { PricingCard } from '@/components/cards/PricingCard';
 import { redirectToCheckout, isCheckoutConfigured } from '@/services/stripeCheckout';
 import type { SubscriptionTier } from '@/types';
 
-const PLANS: {
-  id: SubscriptionTier;
-  name: string;
-  price: string;
-  period: string;
-  description: string;
-  features: string[];
-  cta: string;
-  highlighted?: boolean;
-}[] = [
+const PLANS = [
   {
-    id: 'free',
+    id: 'free' as SubscriptionTier,
     name: 'Free',
     price: 'R$ 0',
     period: '/sempre',
-    description: 'Conheça o produto',
-    features: ['Ver oportunidades com dados limitados', 'Score visível', 'Análise bloqueada'],
-    cta: 'Atual',
+    description: 'Explore sem compromisso',
+    features: [
+      { label: 'Ver feed de oportunidades', included: true },
+      { label: 'Score visível em todos os cards', included: true },
+      { label: 'Análise IA desbloqueada', included: false },
+      { label: 'Link do leilão', included: false },
+      { label: 'Alertas automáticos', included: false },
+      { label: 'Acesso a todas as categorias', included: false },
+    ],
+    cta: 'Começar grátis',
     highlighted: false,
   },
   {
-    id: 'explorer',
+    id: 'explorer' as SubscriptionTier,
     name: 'Explorer',
     price: 'R$ 47',
     period: '/mês',
-    description: 'Acesso completo a uma vertical',
-    features: ['Uma categoria (ex: Veículos)', 'Análise IA desbloqueada', 'Link do leilão'],
-    cta: 'Assinar',
+    description: 'Um vertical completo',
+    features: [
+      { label: 'Feed completo de oportunidades', included: true },
+      { label: 'Análise IA (categoria Veículos)', included: true },
+      { label: 'Link do leilão', included: true },
+      { label: 'Alertas in-app (3 regras)', included: true },
+      { label: 'Todas as categorias', included: false },
+      { label: 'Alertas por email', included: false },
+    ],
+    cta: 'Assinar Explorer',
     highlighted: false,
   },
   {
-    id: 'hunter',
+    id: 'hunter' as SubscriptionTier,
     name: 'Hunter',
     price: 'R$ 97',
     period: '/mês',
-    description: 'Alertas + análise completa',
-    features: ['Todas as categorias', 'Alertas por email/push', 'Análise IA completa', 'Suporte prioritário'],
-    cta: 'Assinar',
+    description: 'O arsenal completo do caçador',
+    features: [
+      { label: 'Todas as categorias desbloqueadas', included: true },
+      { label: 'Análise IA completa', included: true },
+      { label: 'Link do leilão', included: true },
+      { label: 'Alertas in-app + email (10 regras)', included: true },
+      { label: 'Suporte prioritário', included: true },
+      { label: 'Acesso à API', included: false },
+    ],
+    cta: 'Assinar Hunter',
     highlighted: true,
   },
   {
-    id: 'miner',
+    id: 'miner' as SubscriptionTier,
     name: 'Miner',
     price: 'R$ 197',
     period: '/mês',
-    description: 'Múltiplas verticais e máximo poder',
-    features: ['Tudo do Hunter', 'Múltiplas verticais', 'API e relatórios', 'Gerente de conta'],
-    cta: 'Assinar',
+    description: 'Poder máximo para mineradores sérios',
+    features: [
+      { label: 'Tudo do Hunter', included: true },
+      { label: 'Alertas em todos os canais', included: true },
+      { label: '50 regras de alerta', included: true },
+      { label: 'Alertas prioritários (tempo real)', included: true },
+      { label: 'Acesso à API + relatórios', included: true },
+      { label: 'Gerente de conta dedicado', included: true },
+    ],
+    cta: 'Assinar Miner',
     highlighted: false,
   },
 ];
 
 export function PricingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { profile, refetchProfile } = useApp();
+  const { profile, refetchProfile, isAuthenticated } = useApp();
   const { addToast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<SubscriptionTier | null>(null);
 
@@ -78,115 +99,92 @@ export function PricingPage() {
     const success = searchParams.get('success');
     const cancel = searchParams.get('cancel');
     if (success === '1') {
-      addToast({ type: 'success', title: 'Assinatura realizada!' });
+      addToast({ type: 'success', title: '🎉 Assinatura realizada com sucesso!', description: 'Seu acesso foi desbloqueado.' });
       void refetchProfile();
       setSearchParams({}, { replace: true });
     } else if (cancel === '1') {
-      addToast({ type: 'info', title: 'Checkout cancelado.' });
+      addToast({ type: 'info', title: 'Checkout cancelado.', description: 'Você pode assinar a qualquer momento.' });
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams, setSearchParams, refetchProfile]);
+  }, [searchParams, setSearchParams, refetchProfile, addToast]);
 
   async function handleSubscribe(planId: SubscriptionTier) {
     if (planId === 'free') return;
-    if (!checkoutConfigured) {
-      addToast({
-        type: 'info',
-        title: 'Checkout em configuração',
-        description: 'Em breve você poderá assinar por aqui.',
-      });
+    if (!isAuthenticated) {
+      addToast({ type: 'info', title: 'Faça login primeiro', description: 'Crie sua conta gratuitamente para assinar.' });
       return;
     }
-
+    if (!checkoutConfigured) {
+      addToast({ type: 'info', title: 'Pagamento em configuração', description: 'Em breve disponível. Entre em contato.' });
+      return;
+    }
     setLoadingPlan(planId);
     try {
       await redirectToCheckout(planId);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao abrir checkout.';
-      addToast({ type: 'error', title: message });
+      addToast({ type: 'error', title: err instanceof Error ? err.message : 'Erro ao abrir checkout.' });
     } finally {
       setLoadingPlan(null);
     }
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <div className="mb-12 text-center">
-        <h1 className="font-display text-3xl font-bold text-foreground">
-          Planos
+    <div className="mx-auto max-w-7xl px-4 py-16">
+      {/* Hero */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mb-14 text-center"
+      >
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber/30 bg-amber/5 px-4 py-1.5">
+          <Zap className="h-3.5 w-3.5 text-amber" />
+          <span className="font-body text-xs font-medium text-amber">IA Analisa 24/7</span>
+        </div>
+        <h1 className="font-display text-4xl font-black text-foreground lg:text-5xl">
+          Escolha seu nível de{' '}
+          <span className="text-amber">garimpo</span>
         </h1>
-        <p className="mt-2 font-body text-foreground-muted">
-          Escolha o plano ideal e desbloqueie análises de IA em leilões.
+        <p className="mt-4 font-body text-lg text-foreground-muted">
+          Do Free ao Miner — cada plano desbloqueia mais oportunidades e análises.
         </p>
-      </div>
+      </motion.div>
 
+      {/* Cards */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {PLANS.map((plan) => {
-          const isCurrent = currentTier === plan.id;
-
-          return (
-            <div
-              key={plan.id}
-              className={`flex flex-col rounded-lg border bg-background-surface p-6 ${
-                plan.highlighted ? 'border-amber shadow-glow-amber' : 'border-border'
-              }`}
-            >
-              <div className="mb-4 flex items-baseline gap-1">
-                <span className="font-display text-2xl font-bold text-foreground">
-                  {plan.name}
-                </span>
-                {plan.highlighted && (
-                  <span className="rounded bg-amber/20 px-2 py-0.5 font-body text-xs font-medium text-amber">
-                    Recomendado
-                  </span>
-                )}
-              </div>
-              <p className="mb-4 font-body text-sm text-foreground-muted">
-                {plan.description}
-              </p>
-              <div className="mb-6 flex items-baseline gap-1">
-                <span className="font-mono-data text-3xl font-bold text-foreground">
-                  {plan.price}
-                </span>
-                <span className="font-body text-sm text-foreground-muted">{plan.period}</span>
-              </div>
-
-              <ul className="mb-6 flex-1 space-y-2">
-                {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-2 font-body text-sm text-foreground-muted">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-green" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              {plan.id === 'free' ? (
-                <Button variant="outline" className="w-full" disabled>
-                  {isCurrent ? 'Seu plano' : 'Grátis'}
-                </Button>
-              ) : (
-                <Button
-                  variant={plan.highlighted ? 'primary' : 'outline'}
-                  className="w-full"
-                  disabled={isCurrent || loadingPlan !== null}
-                  onClick={() => handleSubscribe(plan.id)}
-                >
-                  {loadingPlan === plan.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : isCurrent ? (
-                    'Seu plano'
-                  ) : (
-                    plan.cta
-                  )}
-                </Button>
-              )}
-            </div>
-          );
-        })}
+        {PLANS.map((plan, i) => (
+          <PricingCard
+            key={plan.id}
+            {...plan}
+            isCurrent={currentTier === plan.id}
+            isLoading={loadingPlan === plan.id}
+            onSubscribe={handleSubscribe}
+            index={i}
+          />
+        ))}
       </div>
+
+      {/* Trust badges */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mt-12 flex flex-wrap items-center justify-center gap-6 text-foreground-muted"
+      >
+        <div className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-green" />
+          <span className="font-body text-sm">Pagamento seguro via Stripe</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-body text-sm">Cancele a qualquer momento</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-body text-sm">Sem fidelidade</span>
+        </div>
+      </motion.div>
 
       <p className="mt-8 text-center">
-        <Link to="/" className="font-body text-sm text-foreground-muted hover:text-foreground">
+        <Link to="/" className="font-body text-sm text-foreground-muted hover:text-amber">
           ← Voltar ao feed
         </Link>
       </p>
