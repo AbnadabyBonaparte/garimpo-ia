@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 export const envSchema = z.object({
   SUPABASE_URL: z.string().optional().default(''),
@@ -30,8 +31,9 @@ function loadEnv() {
   const parsed = envSchema.safeParse(raw);
   const data = parsed.success ? parsed.data : envSchema.parse({});
   if (!parsed.success && typeof window !== 'undefined') {
-    console.warn(
-      '[GARIMPO IA] Env opcional: configure VITE_SUPABASE_*, VITE_STRIPE_PUBLIC_KEY quando estiver pronto.',
+    logger.warn(
+      'Env opcional: configure VITE_SUPABASE_*, VITE_STRIPE_PUBLIC_KEY quando estiver pronto.',
+      'env',
     );
   }
   return data;
