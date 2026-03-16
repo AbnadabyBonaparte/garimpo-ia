@@ -92,7 +92,24 @@ export interface AuctionSource {
   url: string;
   scrape_frequency_minutes: number;
   last_scraped_at: string | null;
+  last_run_at?: string | null;
+  scraper_type?: string;
   is_active: boolean;
+}
+
+export interface ScraperRunRecord {
+  id: string;
+  source_id: string;
+  source_name: string;
+  success: boolean;
+  fetched_count: number;
+  parsed_count: number;
+  inserted_count: number;
+  duplicates_skipped: number;
+  invalid_skipped: number;
+  error_message: string | null;
+  duration_ms: number;
+  created_at: string;
 }
 
 /* ═══════════════════════════════════════════

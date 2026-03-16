@@ -1,0 +1,349 @@
+# GARIMPO IA™ — Data Moat Strategy
+
+**Tipo:** Estratégia de vantagem competitiva baseada em dados  
+**Objetivo:** Construir um dataset proprietário impossível de copiar  
+**Horizonte:** Longo prazo (3–10 anos)  
+**Data:** 2026  
+
+---
+
+# 1. Introdução
+
+O verdadeiro valor do GARIMPO IA não está apenas no software, nos scrapers ou na inteligência artificial.
+
+O valor estratégico está em **acumular e estruturar dados históricos de mercado**.
+
+Empresas líderes de mercado provaram isso:
+
+- Bloomberg → dados financeiros
+- Zillow → dados imobiliários
+- CoStar → dados imobiliários comerciais
+- Kelley Blue Book → dados históricos de veículos
+
+Todas possuem algo em comum:
+
+**um banco de dados proprietário acumulado ao longo de muitos anos.**
+
+Esse banco de dados cria um **Data Moat**.
+
+---
+
+# 2. O que é um Data Moat
+
+Data Moat é uma vantagem competitiva baseada em **dados acumulados que concorrentes não conseguem replicar rapidamente**.
+
+Tipos comuns de vantagem competitiva:
+
+| Tipo | Exemplo |
+|-----|--------|
+| Network effect | Facebook |
+| Brand | Apple |
+| Distribuição | Amazon |
+| Dados | Bloomberg |
+
+O GARIMPO IA deve construir um **Data Moat baseado em dados de ativos físicos**.
+
+---
+
+# 3. O erro comum das plataformas
+
+Muitas plataformas fazem apenas:
+
+
+scraper
+↓
+mostrar oportunidade
+↓
+fim
+
+
+Esse modelo **não cria vantagem competitiva durável**.
+
+Qualquer concorrente pode copiar.
+
+---
+
+# 4. O modelo correto de coleta de dados
+
+O GARIMPO IA deve capturar **o ciclo completo da oportunidade**.
+
+Arquitetura de dados:
+
+
+opportunity
+↓
+auction_event
+↓
+closing_price
+↓
+market_value
+↓
+resale_price
+↓
+roi_real
+
+
+Isso transforma o sistema em **motor de inteligência de mercado**.
+
+---
+
+# 5. Dados essenciais a serem capturados
+
+Cada oportunidade deve registrar informações completas.
+
+## 5.1 Dados do lote
+
+
+title
+category
+location
+auction_source
+closing_date
+initial_price
+description
+asset_type
+
+
+---
+
+## 5.2 Dados do leilão
+
+
+final_price
+number_of_bids
+auction_duration
+auction_type
+seller_type
+
+
+---
+
+## 5.3 Dados de mercado
+
+
+market_value
+liquidity_score
+demand_index
+price_trend
+
+
+---
+
+## 5.4 Dados pós-leilão
+
+
+resale_price
+time_to_sell
+profit_real
+roi_real
+buyer_type
+
+
+---
+
+# 6. Estrutura de banco recomendada
+
+## opportunities
+
+
+id
+title
+category
+location
+auction_source
+auction_url
+initial_price
+closes_at
+created_at
+
+
+---
+
+## auction_history
+
+
+id
+opportunity_id
+bid_price
+bid_time
+bidder_count
+created_at
+
+
+---
+
+## price_history
+
+
+id
+opportunity_id
+observed_price
+source
+observed_at
+
+
+---
+
+## score_history
+
+
+id
+opportunity_id
+score
+model_version
+prompt_version
+created_at
+
+
+---
+
+## opportunity_outcomes
+
+
+id
+opportunity_id
+final_price
+resale_price
+time_to_sell
+profit_real
+roi_real
+recorded_at
+
+
+---
+
+# 7. Índices proprietários
+
+Com dados históricos suficientes, é possível criar índices exclusivos.
+
+Exemplos:
+
+
+Garimpo Opportunity Score
+Garimpo Liquidity Index
+Garimpo ROI Index
+Garimpo Market Momentum
+
+
+Esses índices são ativos estratégicos.
+
+---
+
+# 8. Inteligência de mercado
+
+Com o dataset acumulado, o sistema poderá responder perguntas como:
+
+
+Qual categoria gera mais ROI?
+Qual estado tem maior liquidez?
+Qual fonte de leilão gera mais oportunidades lucrativas?
+Qual faixa de preço tem melhor margem?
+
+
+---
+
+# 9. Camada de Machine Learning
+
+Quando o dataset crescer, novos modelos podem ser criados.
+
+## Previsão de preço
+
+
+expected_price
+
+
+---
+
+## Previsão de liquidez
+
+
+probability_to_sell
+
+
+---
+
+## Previsão de ROI
+
+
+expected_roi
+
+
+---
+
+# 10. Flywheel de dados
+
+O crescimento do sistema cria um ciclo virtuoso.
+
+
+dados
+↓
+IA
+↓
+produto melhor
+↓
+mais usuários
+↓
+mais dados
+
+
+Esse ciclo cria uma **vantagem competitiva cumulativa**.
+
+---
+
+# 11. O verdadeiro ativo do GARIMPO IA
+
+Tecnologias usadas hoje:
+
+
+React
+Supabase
+Gemini
+Scrapers
+
+
+Essas tecnologias podem ser copiadas.
+
+O que **não pode ser copiado rapidamente**:
+
+
+dataset proprietário de inteligência de ativos físicos
+
+
+---
+
+# 12. Visão de longo prazo
+
+Se executado corretamente, o GARIMPO IA pode evoluir para:
+
+
+Bloomberg dos ativos físicos
+
+
+Uma plataforma capaz de:
+
+- analisar mercados de ativos físicos
+- prever oportunidades
+- gerar inteligência de investimento
+- fornecer dados estratégicos para empresas
+
+---
+
+# 13. Princípio estratégico
+
+Todo novo recurso do sistema deve responder à pergunta:
+
+**Isso aumenta nosso dataset proprietário?**
+
+Se a resposta for **não**, o recurso deve ser repensado.
+
+---
+
+# 14. Conclusão
+
+O sucesso do GARIMPO IA não depende apenas de tecnologia.
+
+Depende de **acumular dados estruturados de mercado ao longo do tempo**.
+
+Porque no final:
+
+**Quem controla os dados controla o mercado.**
