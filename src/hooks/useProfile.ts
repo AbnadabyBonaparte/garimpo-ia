@@ -7,7 +7,7 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useApp } from '@/contexts/AppContext';
-import type { UserProfile, OpportunityCategory } from '@/types';
+import type { OpportunityCategory } from '@/types';
 
 export interface UpdateProfileInput {
   full_name?: string;

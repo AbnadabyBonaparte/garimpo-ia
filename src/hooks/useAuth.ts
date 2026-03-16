@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { z } from 'zod';
 import { useApp } from '@/contexts/AppContext';
 
@@ -78,36 +79,39 @@ export function useAuth() {
     [signUp],
   );
 
-  const handleResetPassword = useCallback(
-    async (email: string): Promise<boolean> => {
-      setErrors({});
-      const result = z.string().email('Email inválido').safeParse(email);
-      if (!result.success) {
-        setErrors({ email: result.error.errors[0]?.message ?? 'Email inválido' });
-        return false;
-      }
-      // Supabase reset — import direto para não criar dep circular no AppContext
-      const { supabase } = await import('@/lib/supabaseClient');
-      if (!supabase) {
-        setErrors({ form: 'Supabase não configurado.' });
-        return false;
-      }
-      setIsLoading(true);
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(result.data, {
-          redirectTo: `${window.location.origin}/profile`,
-        });
-        if (error) throw error;
-        return true;
-      } catch (err) {
-        setErrors({ form: err instanceof Error ? err.message : 'Erro ao enviar email.' });
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
+  const handleResetPassword = useCallback(async (email: string): Promise<boolean> => {
+    setErrors({});
+    const result = z.string().email('Email inválido').safeParse(email);
+    if (!result.success) {
+      setErrors({ email: result.error.errors[0]?.message ?? 'Email inválido' });
+      return false;
+    }
+    // Supabase reset — import direto para não criar dep circular no AppContext
+    if (!supabase) {
+      setErrors({ form: 'Supabase não configurado.' });
+      return false;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(result.data, {
+        redirectTo: `${window.location.origin}/profile`,
+      });
+      if (error) throw error;
+      return true;
+    } catch (err) {
+      setErrors({ form: err instanceof Error ? err.message : 'Erro ao enviar email.' });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  return { handleSignIn, handleSignUp, handleResetPassword, isLoading, errors, clearErrors };
+  return {
+    handleSignIn,
+    handleSignUp,
+    handleResetPassword,
+    isLoading,
+    errors,
+    clearErrors,
+  };
 }

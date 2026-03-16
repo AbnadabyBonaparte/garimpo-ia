@@ -1,88 +1,93 @@
 /**
  * GARIMPO IA™ — useAlertRules Hook
- *
- * Fetch and mutate alert rules for the current user. Phase 2.
+ * CRUD de regras de alerta do usuário.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useApp } from '@/contexts/AppContext';
-import type { AlertRule, OpportunityCategory } from '@/types';
+import type { AlertRule, OpportunityCategory, AlertChannel } from '@/types';
 
 export interface CreateAlertRuleInput {
-  min_score: number;
-  categories: OpportunityCategory[];
-  states: string[];
+  categories?: OpportunityCategory[];
+  states?: string[];
+  min_score?: number;
+  min_roi?: number;
+  channels?: AlertChannel[];
 }
 
 export function useAlertRules() {
   const { session } = useApp();
-  const [rules, setRules] = useState<AlertRule[]>([]);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [error, setError] = useState<string | null>(null);
-
   const userId = session?.user?.id;
+
+  const [rules, setRules] = useState<AlertRule[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchRules = useCallback(async () => {
     if (!supabase || !userId) {
       setRules([]);
-      setStatus('success');
       return;
     }
-    setStatus('loading');
-    setError(null);
+    setIsLoading(true);
     try {
       const { data, error: e } = await supabase
         .from('alert_rules')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
-
       if (e) throw e;
-      setRules((data as AlertRule[]) ?? []);
-      setStatus('success');
+      setRules((data ?? []) as AlertRule[]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar regras');
-      setStatus('error');
+      setError(err instanceof Error ? err.message : 'Erro ao carregar regras.');
+    } finally {
+      setIsLoading(false);
     }
   }, [userId]);
 
-  useEffect(() => {
-    void fetchRules();
-  }, [fetchRules]);
-
   const createRule = useCallback(
-    async (input: CreateAlertRuleInput) => {
-      if (!supabase || !userId) throw new Error('Faça login para criar alertas.');
+    async (input: CreateAlertRuleInput): Promise<boolean> => {
+      if (!supabase || !userId) return false;
       const { error: e } = await supabase.from('alert_rules').insert({
         user_id: userId,
-        min_score: input.min_score,
-        categories: input.categories,
-        states: input.states,
+        categories: input.categories ?? [],
+        states: input.states ?? [],
+        min_score: input.min_score ?? 0,
+        min_roi: input.min_roi ?? 0,
+        channels: input.channels ?? ['in_app'],
+        is_active: true,
       });
-      if (e) throw e;
+      if (e) {
+        setError(e.message);
+        return false;
+      }
       await fetchRules();
+      return true;
     },
     [userId, fetchRules],
   );
 
   const deleteRule = useCallback(
-    async (id: string) => {
-      if (!supabase) return;
-      const { error: e } = await supabase.from('alert_rules').delete().eq('id', id).eq('user_id', userId!);
-      if (e) throw e;
-      await fetchRules();
+    async (ruleId: string): Promise<boolean> => {
+      if (!supabase || !userId) return false;
+      const { error: e } = await supabase
+        .from('alert_rules')
+        .delete()
+        .eq('id', ruleId)
+        .eq('user_id', userId);
+      if (e) {
+        setError(e.message);
+        return false;
+      }
+      setRules((prev) => prev.filter((r) => r.id !== ruleId));
+      return true;
     },
-    [userId, fetchRules],
+    [userId],
   );
 
-  return {
-    rules,
-    isLoading: status === 'loading',
-    isError: status === 'error',
-    error,
-    refetch: fetchRules,
-    createRule,
-    deleteRule,
-  };
+  useEffect(() => {
+    void fetchRules();
+  }, [fetchRules]);
+
+  return { rules, isLoading, error, fetchRules, createRule, deleteRule };
 }
