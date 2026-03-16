@@ -1,45 +1,46 @@
 /**
- * GARIMPO IA™ — useAnalytics Hook (Phase 3)
+ * GARIMPO IA™ — useAnalytics Hook (RPC-based)
  *
- * Aggregates for dashboard: total opportunities, avg score, by category, by state, recent.
+ * FIX: Substitui client-side aggregation (2000 rows) por 4 RPCs server-side.
+ * Escala para qualquer volume sem degradar o cliente.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import type { Opportunity } from '@/types';
-
-const SAMPLE_SIZE = 2000;
-const RECENT_LIMIT = 10;
+import type {
+  AnalyticsSummary,
+  CategoryDistributionItem,
+  StateDistributionItem,
+  ScoreHistoryItem,
+  Opportunity,
+} from '@/types';
 
 export interface AnalyticsData {
-  total: number;
-  avgScore: number;
-  byCategory: { category: string; count: number }[];
-  byState: { state: string; count: number }[];
-  recent: Opportunity[];
+  summary: AnalyticsSummary;
+  categories: CategoryDistributionItem[];
+  states: StateDistributionItem[];
+  history: ScoreHistoryItem[];
+  recent: Pick<Opportunity, 'id' | 'title' | 'score' | 'current_bid' | 'closes_at'>[];
 }
 
+const EMPTY_SUMMARY: AnalyticsSummary = {
+  total_opportunities: 0,
+  avg_score: 0,
+  avg_roi: 0,
+  total_potential_profit: 0,
+  active_count: 0,
+  high_score_count: 0,
+};
+
 const empty: AnalyticsData = {
-  total: 0,
-  avgScore: 0,
-  byCategory: [],
-  byState: [],
+  summary: EMPTY_SUMMARY,
+  categories: [],
+  states: [],
+  history: [],
   recent: [],
 };
 
-function aggregate(rows: { score: number; category: string; state: string }[]): Omit<AnalyticsData, 'recent'> {
-  const total = rows.length;
-  const avgScore = total ? rows.reduce((s, r) => s + r.score, 0) / total : 0;
-  const categoryMap = new Map<string, number>();
-  const stateMap = new Map<string, number>();
-  for (const r of rows) {
-    categoryMap.set(r.category, (categoryMap.get(r.category) ?? 0) + 1);
-    stateMap.set(r.state, (stateMap.get(r.state) ?? 0) + 1);
-  }
-  const byCategory = Array.from(categoryMap.entries()).map(([category, count]) => ({ category, count })).sort((a, b) => b.count - a.count);
-  const byState = Array.from(stateMap.entries()).map(([state, count]) => ({ state, count })).sort((a, b) => b.count - a.count);
-  return { total, avgScore, byCategory, byState };
-}
+const RECENT_LIMIT = 10;
 
 export function useAnalytics() {
   const [data, setData] = useState<AnalyticsData>(empty);
@@ -54,19 +55,29 @@ export function useAnalytics() {
     }
     setLoading(true);
     setError(null);
+
     try {
-      const [{ count: total }, { data: rows }] = await Promise.all([
-        supabase.from('opportunities').select('*', { count: 'exact', head: true }),
-        supabase.from('opportunities').select('id, title, score, category, state, current_bid, market_value, closes_at, created_at').order('created_at', { ascending: false }).limit(SAMPLE_SIZE),
+      // Todas as chamadas em paralelo — 4 RPCs server-side + 1 query paginada
+      const [summaryRes, categoriesRes, statesRes, historyRes, recentRes] = await Promise.all([
+        supabase.rpc('get_analytics_summary'),
+        supabase.rpc('get_category_distribution'),
+        supabase.rpc('get_state_distribution'),
+        supabase.rpc('get_score_history'),
+        supabase
+          .from('opportunities')
+          .select('id, title, score, current_bid, closes_at')
+          .order('created_at', { ascending: false })
+          .limit(RECENT_LIMIT),
       ]);
 
-      const list = (rows ?? []) as { score: number; category: string; state: string }[] & Opportunity[];
-      const agg = aggregate(list);
-      const recent = (rows ?? []).slice(0, RECENT_LIMIT) as Opportunity[];
+      if (summaryRes.error) throw summaryRes.error;
+
       setData({
-        ...agg,
-        total: total ?? list.length,
-        recent,
+        summary: (summaryRes.data as AnalyticsSummary) ?? EMPTY_SUMMARY,
+        categories: (categoriesRes.data as CategoryDistributionItem[]) ?? [],
+        states: (statesRes.data as StateDistributionItem[]) ?? [],
+        history: (historyRes.data as ScoreHistoryItem[]) ?? [],
+        recent: (recentRes.data ?? []) as AnalyticsData['recent'],
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao carregar analytics.');

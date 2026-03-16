@@ -1,7 +1,6 @@
 /**
  * GARIMPO IA™ — useOpportunity Hook
- *
- * Fetch single opportunity by id. LEI 5: loading, error, not-found.
+ * Busca UMA oportunidade por ID.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -15,49 +14,37 @@ export function useOpportunity(id: string | undefined) {
     error: null,
   });
 
-  const fetchOpportunity = useCallback(async () => {
+  const fetch = useCallback(async () => {
     if (!id) {
-      setState({ data: null, status: 'error', error: 'ID não informado' });
+      setState({ data: null, status: 'error', error: 'ID inválido.' });
       return;
     }
     if (!supabase) {
-      setState({ data: null, status: 'success', error: null });
+      setState({ data: null, status: 'error', error: 'Supabase não configurado.' });
       return;
     }
-
-    setState((prev) => ({ ...prev, status: 'loading', error: null }));
-
-    try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          setState({ data: null, status: 'error', error: 'Oportunidade não encontrada' });
-          return;
-        }
-        throw error;
-      }
-
+    setState((p) => ({ ...p, status: 'loading', error: null }));
+    const { data, error } = await supabase
+      .from('opportunities')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) {
+      setState({ data: null, status: 'error', error: error.message });
+    } else {
       setState({ data: data as Opportunity, status: 'success', error: null });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao carregar oportunidade';
-      setState({ data: null, status: 'error', error: message });
     }
   }, [id]);
 
   useEffect(() => {
-    void fetchOpportunity();
-  }, [fetchOpportunity]);
+    void fetch();
+  }, [fetch]);
 
   return {
-    ...state,
-    refetch: fetchOpportunity,
-    isLoading: state.status === 'loading',
+    data: state.data,
+    isLoading: state.status === 'loading' || state.status === 'idle',
     isError: state.status === 'error',
-    isNotFound: state.status === 'error' && state.error === 'Oportunidade não encontrada',
+    error: state.error,
+    refetch: fetch,
   };
 }

@@ -1,8 +1,8 @@
 /**
  * GARIMPO IA™ — Opportunity Ingestion (Phase 3)
  *
- * Single and bulk insert with normalization. Triggers run-ai-analysis after insert.
- * Usable from: admin UI, scripts (with Supabase client), or an Edge Function that calls the same logic.
+ * Single and bulk insert with normalization.
+ * FIX: bulkInsert agora usa batch insert único (não N round trips).
  */
 
 import { supabase } from '@/lib/supabaseClient';
@@ -18,38 +18,29 @@ import type {
 } from '@/types';
 
 const CATEGORIES: OpportunityCategory[] = [
-  'vehicle',
-  'property',
-  'agriculture',
-  'machinery',
-  'electronics',
-  'other',
+  'vehicle', 'property', 'agriculture', 'machinery', 'electronics', 'other',
 ];
 const RISK_LEVELS: RiskLevel[] = ['low', 'medium', 'high'];
 const LIQUIDITY_LEVELS: LiquidityLevel[] = ['high', 'medium', 'low'];
 
 function toCategory(v: unknown): OpportunityCategory {
   const s = String(v ?? '').toLowerCase().trim();
-  if (CATEGORIES.includes(s as OpportunityCategory)) return s as OpportunityCategory;
-  return 'other';
+  return CATEGORIES.includes(s as OpportunityCategory) ? (s as OpportunityCategory) : 'other';
 }
 
 function toRiskLevel(v: unknown): RiskLevel {
   const s = String(v ?? 'medium').toLowerCase().trim();
-  if (RISK_LEVELS.includes(s as RiskLevel)) return s as RiskLevel;
-  return 'medium';
+  return RISK_LEVELS.includes(s as RiskLevel) ? (s as RiskLevel) : 'medium';
 }
 
 function toLiquidity(v: unknown): LiquidityLevel {
   const s = String(v ?? 'medium').toLowerCase().trim();
-  if (LIQUIDITY_LEVELS.includes(s as LiquidityLevel)) return s as LiquidityLevel;
-  return 'medium';
+  return LIQUIDITY_LEVELS.includes(s as LiquidityLevel) ? (s as LiquidityLevel) : 'medium';
 }
 
-/**
- * Normalize external/API payload into a valid opportunities insert row.
- */
-export function normalizeOpportunityData(payload: OpportunityIngestionPayload): OpportunityInsertRow {
+export function normalizeOpportunityData(
+  payload: OpportunityIngestionPayload,
+): OpportunityInsertRow {
   const current_bid = Math.max(0, Number(payload.current_bid) || 0);
   const market_value = Math.max(0, Number(payload.market_value) || 0);
   let closes_at: string;
@@ -80,7 +71,6 @@ export function normalizeOpportunityData(payload: OpportunityIngestionPayload): 
 }
 
 export interface CreateOpportunityOptions {
-  /** Trigger run-ai-analysis after insert (default true when URL configured). */
   triggerAi?: boolean;
   /** Skip insert if duplicate exists (auction_url, title, source, closes_at). */
   skipDuplicate?: boolean;
@@ -88,10 +78,6 @@ export interface CreateOpportunityOptions {
   validate?: boolean;
 }
 
-/**
- * Insert one opportunity and optionally trigger AI analysis.
- * Returns the new opportunity id or null on failure or if duplicate skipped.
- */
 export async function createOpportunity(
   payload: OpportunityIngestionPayload,
   options: CreateOpportunityOptions = {},
@@ -117,8 +103,7 @@ export async function createOpportunity(
 
   if (error || !data?.id) return null;
 
-  const shouldTrigger =
-    options.triggerAi !== false && isRunAiAnalysisConfigured();
+  const shouldTrigger = options.triggerAi !== false && isRunAiAnalysisConfigured();
   if (shouldTrigger) {
     triggerRunAiAnalysis(data.id).catch(() => {});
   }
@@ -133,8 +118,8 @@ export interface BulkInsertResult {
 }
 
 /**
- * Insert multiple opportunities and trigger AI analysis for each (non-blocking).
- * When validate: true, invalid payloads are skipped. When skipDuplicate: true, duplicates are skipped.
+ * Insert múltiplas oportunidades em BATCH ÚNICO (um round trip).
+ * FIX: Substituiu loop sequencial por insert em batch.
  */
 export async function bulkInsertOpportunities(
   payloads: OpportunityIngestionPayload[],
@@ -164,22 +149,23 @@ export async function bulkInsertOpportunities(
 
   const rows = toInsert.map((p) => normalizeOpportunityData(p));
 
-  for (let i = 0; i < rows.length; i++) {
-    const { data, error } = await supabase
-      .from('opportunities')
-      .insert(rows[i])
-      .select('id')
-      .single();
+  // Batch insert único — O(1) round trips em vez de O(n)
+  const { data, error } = await supabase
+    .from('opportunities')
+    .insert(rows)
+    .select('id');
 
-    if (error) {
-      errors.push({ index: i, message: error.message });
-      continue;
-    }
-    if (data?.id) {
-      ids.push(data.id);
-      if (options.triggerAi !== false && isRunAiAnalysisConfigured()) {
-        triggerRunAiAnalysis(data.id).catch(() => {});
-      }
+  if (error) {
+    payloads.forEach((_, i) => errors.push({ index: i, message: error.message }));
+    return { ids, errors };
+  }
+
+  const insertedIds = (data ?? []).map((r: { id: string }) => r.id);
+  ids.push(...insertedIds);
+
+  if (options.triggerAi !== false && isRunAiAnalysisConfigured()) {
+    for (const id of insertedIds) {
+      triggerRunAiAnalysis(id).catch(() => {});
     }
   }
 

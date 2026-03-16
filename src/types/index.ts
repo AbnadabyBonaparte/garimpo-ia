@@ -48,8 +48,10 @@ export interface UserProfile {
   email: string;
   full_name: string;
   avatar_url: string | null;
+  role: 'user' | 'admin';
   subscription_tier: SubscriptionTier;
   subscription_expires_at: string | null;
+  stripe_customer_id: string | null;
   preferred_categories: OpportunityCategory[];
   preferred_states: string[];
   notification_whatsapp: boolean;
@@ -76,8 +78,11 @@ export interface AlertRule {
   id: string;
   user_id: string;
   min_score: number;
+  min_roi: number;
   categories: OpportunityCategory[];
   states: string[];
+  channels: AlertChannel[];
+  is_active: boolean;
   created_at: string;
 }
 
@@ -209,4 +214,36 @@ export interface WatchlistItem {
   user_id: string;
   opportunity_id: string;
   created_at: string;
+}
+
+/* ═══════════════════════════════════════════
+   ANALYTICS TYPES (RPC responses)
+═══════════════════════════════════════════ */
+
+export interface AnalyticsSummary {
+  total_opportunities: number;
+  avg_score: number;
+  avg_roi: number;
+  total_potential_profit: number;
+  active_count: number;
+  high_score_count: number;
+}
+
+export interface CategoryDistributionItem {
+  category: string;
+  count: number;
+  avg_score: number;
+  avg_roi: number;
+}
+
+export interface StateDistributionItem {
+  state: string;
+  count: number;
+  avg_score: number;
+}
+
+export interface ScoreHistoryItem {
+  day: string;
+  avg_score: number;
+  count: number;
 }
