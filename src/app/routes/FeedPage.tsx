@@ -14,6 +14,7 @@ import { useApp } from '@/contexts/AppContext';
 import { OpportunityCard } from '@/components/cards/OpportunityCard';
 import { OpportunityCardSkeleton } from '@/components/ui/Skeleton';
 import { ErrorState, EmptyState } from '@/components/ui/StateDisplay';
+import { canAccessCategory } from '@/lib/permissions';
 import type { OpportunityCategory } from '@/types';
 
 const CATEGORIES: { value: OpportunityCategory; label: string }[] = [
@@ -37,10 +38,6 @@ export function FeedPage() {
     refetch,
   } = useOpportunities({ categories: selectedCategories });
 
-  const isSubscriber =
-    isAuthenticated &&
-    profile?.subscription_tier !== 'free';
-
   function toggleCategory(cat: OpportunityCategory) {
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
@@ -53,9 +50,7 @@ export function FeedPage() {
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold text-foreground">
           Oportunidades{' '}
-          {opportunities && (
-            <span className="text-amber">↑{opportunities.total}</span>
-          )}
+          {opportunities && <span className="text-amber">↑{opportunities.total}</span>}
         </h1>
         <p className="mt-1 text-sm text-foreground-muted">
           Monitoramento 24/7 em 50+ fontes de leilão
@@ -70,7 +65,7 @@ export function FeedPage() {
             onClick={() => toggleCategory(cat.value)}
             className={`rounded-full border px-3 py-1.5 font-body text-xs font-medium transition-all duration-[var(--duration-normal)] ${
               selectedCategories.includes(cat.value)
-                ? 'border-amber bg-amber/10 text-amber'
+                ? 'bg-amber/10 border-amber text-amber'
                 : 'border-border bg-transparent text-foreground-muted hover:border-foreground-muted'
             }`}
           >
@@ -115,7 +110,11 @@ export function FeedPage() {
             <OpportunityCard
               key={opp.id}
               opportunity={opp}
-              isUnlocked={!!isSubscriber}
+              isUnlocked={
+                isAuthenticated &&
+                !!profile &&
+                canAccessCategory(profile.subscription_tier, opp.category)
+              }
               onViewAnalysis={(oppId) => navigate(`/opportunity/${oppId}`)}
               onSubscribe={() => navigate('/pricing')}
             />
