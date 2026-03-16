@@ -13,8 +13,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import { logger } from '@/lib/logger';
+import { supabase } from '@/lib/supabaseClient';
 import type { UserProfile, Theme } from '@/types';
 import type { Session } from '@supabase/supabase-js';
 

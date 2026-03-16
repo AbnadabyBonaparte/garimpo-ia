@@ -11,10 +11,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { useApp } from '@/contexts/AppContext';
+import { canAccessCategory } from '@/lib/permissions';
 import { OpportunityCard } from '@/components/cards/OpportunityCard';
 import { OpportunityCardSkeleton } from '@/components/ui/Skeleton';
 import { ErrorState, EmptyState } from '@/components/ui/StateDisplay';
-import { canAccessCategory } from '@/lib/permissions';
 import type { OpportunityCategory } from '@/types';
 
 const CATEGORIES: { value: OpportunityCategory; label: string }[] = [
@@ -111,7 +111,7 @@ export function FeedPage() {
               key={opp.id}
               opportunity={opp}
               isUnlocked={
-                isAuthenticated &&
+                !!isAuthenticated &&
                 !!profile &&
                 canAccessCategory(profile.subscription_tier, opp.category)
               }
