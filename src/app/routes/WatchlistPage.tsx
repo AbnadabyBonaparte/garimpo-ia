@@ -13,7 +13,7 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { OpportunityCard } from '@/components/cards/OpportunityCard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
-import { canAccessAI } from '@/lib/permissions';
+import { canAccessCategory } from '@/lib/permissions';
 
 export function WatchlistPage() {
   const { isAuthenticated, isLoading: appLoading, profile } = useApp();
@@ -31,7 +31,6 @@ export function WatchlistPage() {
   if (!isAuthenticated) return <Navigate to="/login?returnTo=/watchlist" replace />;
 
   const tier = profile?.subscription_tier ?? 'free';
-  const hasAI = canAccessAI(tier);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 pb-20">
@@ -97,7 +96,10 @@ export function WatchlistPage() {
                 transition={{ delay: i * 0.05 }}
               >
                 <div className="group relative">
-                  <OpportunityCard opportunity={opp} isUnlocked={hasAI} />
+                  <OpportunityCard
+                    opportunity={opp}
+                    isUnlocked={canAccessCategory(tier, opp.category)}
+                  />
                   <button
                     onClick={() => removeFromWatchlist(opp.id)}
                     className="absolute right-3 top-3 rounded-full border border-border bg-background-surface p-1.5 opacity-0 transition-opacity hover:border-red hover:text-red group-hover:opacity-100"
