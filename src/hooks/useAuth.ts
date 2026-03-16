@@ -9,14 +9,16 @@ import { supabase } from '@/lib/supabaseClient';
 import { z } from 'zod';
 import { useApp } from '@/contexts/AppContext';
 
-const signInSchema = z.object({
+export const signInSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
 });
 
-const signUpSchema = signInSchema.extend({
+export const signUpSchema = signInSchema.extend({
   fullName: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres'),
 });
+
+export const resetSchema = z.string().email('Email inválido');
 
 export function useAuth() {
   const { signIn, signUp } = useApp();

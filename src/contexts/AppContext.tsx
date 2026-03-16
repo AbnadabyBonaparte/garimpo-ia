@@ -14,6 +14,7 @@ import {
   type ReactNode,
 } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/logger';
 import type { UserProfile, Theme } from '@/types';
 import type { Session } from '@supabase/supabase-js';
 
@@ -98,21 +99,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       setProfile(data as UserProfile);
     } catch (err) {
-      console.error('[GARIMPO IA] Failed to fetch profile:', err);
+      logger.captureError(err, 'AppContext.fetchProfile');
     } finally {
       setIsLoading(false);
     }
   }
 
   const signIn = useCallback(async (email: string, password: string) => {
-    if (!supabase) throw new Error('Configure Supabase (VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) no Vercel.');
+    if (!supabase)
+      throw new Error(
+        'Configure Supabase (VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) no Vercel.',
+      );
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   }, []);
 
   const signUp = useCallback(
     async (email: string, password: string, fullName: string) => {
-      if (!supabase) throw new Error('Configure Supabase (VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) no Vercel.');
+      if (!supabase)
+        throw new Error(
+          'Configure Supabase (VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) no Vercel.',
+        );
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -131,7 +138,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refetchProfile = useCallback(async () => {
     if (!supabase) return;
-    const { data: { session: s } } = await supabase.auth.getSession();
+    const {
+      data: { session: s },
+    } = await supabase.auth.getSession();
     if (s?.user) await fetchProfile(s.user.id);
   }, []);
 
@@ -155,6 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useApp(): AppContextValue {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error('useApp must be used within <AppProvider>');
