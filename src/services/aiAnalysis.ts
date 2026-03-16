@@ -11,11 +11,14 @@ import { supabase } from '@/lib/supabaseClient';
 import { envConfig } from '@/lib/env';
 import type { AIAnalysisResponse } from '@/types';
 
-const aiResponseSchema = z.object({
+export const aiResponseSchema = z.object({
   score: z.number().min(0).max(100),
   summary: z.string().optional().default(''),
   risks: z.array(z.string()).optional().default([]),
-  recommendation: z.enum(['strong_buy', 'buy', 'hold', 'avoid']).optional().default('hold'),
+  recommendation: z
+    .enum(['strong_buy', 'buy', 'hold', 'avoid'])
+    .optional()
+    .default('hold'),
   estimated_total_cost: z.number().optional().default(0),
   estimated_net_profit: z.number().optional().default(0),
 });
@@ -39,8 +42,11 @@ export async function analyzeOpportunity(
     throw new Error('Autenticação necessária para análise de IA.');
   }
 
-  const apiUrl = envConfig.RUN_AI_ANALYSIS_API_URL?.trim()
-    || (envConfig.SUPABASE_URL ? `${envConfig.SUPABASE_URL}/functions/v1/run-ai-analysis` : '');
+  const apiUrl =
+    envConfig.RUN_AI_ANALYSIS_API_URL?.trim() ||
+    (envConfig.SUPABASE_URL
+      ? `${envConfig.SUPABASE_URL}/functions/v1/run-ai-analysis`
+      : '');
 
   if (!apiUrl) {
     throw new Error('Configure VITE_RUN_AI_ANALYSIS_API_URL no Vercel.');
@@ -66,8 +72,5 @@ export async function analyzeOpportunity(
 }
 
 export function isAiAnalysisConfigured(): boolean {
-  return !!(
-    envConfig.RUN_AI_ANALYSIS_API_URL?.trim() ||
-    envConfig.SUPABASE_URL?.trim()
-  );
+  return !!(envConfig.RUN_AI_ANALYSIS_API_URL?.trim() || envConfig.SUPABASE_URL?.trim());
 }

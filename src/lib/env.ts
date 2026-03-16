@@ -8,7 +8,7 @@
 
 import { z } from 'zod';
 
-const envSchema = z.object({
+export const envSchema = z.object({
   SUPABASE_URL: z.string().optional().default(''),
   SUPABASE_ANON_KEY: z.string().optional().default(''),
   STRIPE_PUBLIC_KEY: z.string().optional().default(''),
@@ -41,8 +41,5 @@ export const envConfig = loadEnv();
 
 /** True se Supabase está configurado e pode ser usado. */
 export function isSupabaseConfigured(): boolean {
-  return !!(
-    envConfig.SUPABASE_URL?.trim() &&
-    envConfig.SUPABASE_ANON_KEY?.trim()
-  );
+  return !!(envConfig.SUPABASE_URL?.trim() && envConfig.SUPABASE_ANON_KEY?.trim());
 }

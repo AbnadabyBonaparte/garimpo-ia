@@ -4,12 +4,37 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+  cn,
   formatBRL,
   formatPercent,
   formatTimeRemaining,
   getCategoryLabel,
   getCategoryEmoji,
 } from '../utils';
+
+describe('cn', () => {
+  it('retorna string de classes mescladas', () => {
+    expect(cn('px-4', 'py-2')).toBe('px-4 py-2');
+  });
+
+  it('remove classes duplicadas (tailwind-merge)', () => {
+    // tailwind-merge resolve conflitos: a última vence
+    const result = cn('px-4', 'px-8');
+    expect(result).toBe('px-8');
+  });
+
+  it('ignora valores falsy', () => {
+    expect(cn('px-4', false, undefined, null, 'py-2')).toBe('px-4 py-2');
+  });
+
+  it('aceita condicional com objeto clsx', () => {
+    expect(cn({ 'text-amber': true, 'text-red': false })).toBe('text-amber');
+  });
+
+  it('retorna string vazia para entrada vazia', () => {
+    expect(cn()).toBe('');
+  });
+});
 
 describe('formatBRL', () => {
   it('formats zero', () => {
